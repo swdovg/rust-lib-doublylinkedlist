@@ -5,7 +5,7 @@ use std::rc::Rc;
 pub struct List<T> {
     head: Link<T>,
     tail: Link<T>,
-    size: i32,
+    size: u32,
 }
 
 type Link<T> = Option<Rc<RefCell<Node<T>>>>;
@@ -25,6 +25,10 @@ impl<T> Node<T> {
             next: None,
         }))
     }
+}
+
+pub fn print_i32 (value: &i32){
+    print!("{} ", value.clone());
 }
 
 impl<T> List<T> {
@@ -62,6 +66,38 @@ impl<T> List<T> {
             }
         }
         self.size+=1;
+    }
+
+
+    pub fn push_nth(&mut self, index: u32, elem: T, print_item: fn(&T) ) {
+        if self.size <= index {
+        }
+        else {
+            let mut i=0;
+            let mut cur_node = self.head.clone();
+            while i < index {
+                cur_node = cur_node.map(|node| node.borrow().next.clone().unwrap());
+                i+=1;
+            }
+            cur_node.map(|node| {
+                let new_node = Node::new(elem);
+                new_node.borrow_mut().next = node.borrow().next.clone();
+                new_node.borrow_mut().prev = Some(node.clone());
+
+                match node.borrow_mut().next.clone() {
+                    Some(next_node) => { next_node.borrow_mut().prev = Some(new_node.clone()) }
+                    None => { self.tail = Some(node.clone()) }
+                }
+
+                node.borrow_mut().next = Some(new_node);
+
+                match node.borrow_mut().prev.clone() {
+                    Some(next_node) => {}
+                    None => { self.head = Some(node.clone()) }
+                }
+            });
+            self.size+=1;
+        }
     }
 
     pub fn pop_head(&mut self) -> Option<T> {
@@ -120,7 +156,7 @@ impl<T> List<T> {
         })
     }
 
-    pub fn  print_dbl_linked_list(&self, print_item: fn(&T) ) {
+    pub fn print_dbl_linked_list(&self, print_item: fn(&T) ) {
         let mut h = self.head.clone();
         loop {
             match h.clone() {
@@ -136,12 +172,16 @@ impl<T> List<T> {
         }
     }
 
-    pub fn  is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         if self.head.is_none() {
             true
         }
         else {
             false
         }
+    }
+
+    pub fn get_size(&self) -> u32 {
+        self.size
     }
 }
