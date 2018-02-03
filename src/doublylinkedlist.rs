@@ -1,7 +1,6 @@
 use std::cell::{Ref, RefMut, RefCell};
 use std::rc::Rc;
 
-#[derive(Debug)]
 pub struct List<T> {
     head: Link<T>,
     tail: Link<T>,
@@ -10,7 +9,6 @@ pub struct List<T> {
 
 type Link<T> = Option<Rc<RefCell<Node<T>>>>;
 
-#[derive(Debug)]
 struct Node<T> {
     elem: T,
     next: Link<T>,
@@ -25,10 +23,6 @@ impl<T> Node<T> {
             next: None,
         }))
     }
-}
-
-pub fn print_i32 (value: &i32){
-    print!("{} ", value.clone());
 }
 
 impl<T> List<T> {
@@ -49,7 +43,7 @@ impl<T> List<T> {
                 self.head = Some(new_head);
             }
         }
-        self.size+=1;
+        self.size += 1;
     }
 
     pub fn push_tail(&mut self, elem: T) {
@@ -65,19 +59,17 @@ impl<T> List<T> {
                 self.tail = Some(new_tail);
             }
         }
-        self.size+=1;
+        self.size += 1;
     }
 
 
-    pub fn push_nth(&mut self, index: u32, elem: T, print_item: fn(&T) ) {
-        if self.size <= index {
-        }
-        else {
-            let mut i=0;
+    pub fn push_nth(&mut self, index: u32, elem: T) {
+        if index < self.size {
+            let mut i = 0;
             let mut cur_node = self.head.clone();
             while i < index {
                 cur_node = cur_node.map(|node| node.borrow().next.clone().unwrap());
-                i+=1;
+                i += 1;
             }
             cur_node.map(|node| {
                 let new_node = Node::new(elem);
@@ -96,7 +88,7 @@ impl<T> List<T> {
                     None => { self.head = Some(node.clone()) }
                 }
             });
-            self.size+=1;
+            self.size += 1;
         }
     }
 
@@ -111,7 +103,7 @@ impl<T> List<T> {
                     self.tail.take();
                 }
             }
-            self.size-=1;
+            self.size -= 1;
             Rc::try_unwrap(old_head).ok().unwrap().into_inner().elem
         })
     }
@@ -127,9 +119,35 @@ impl<T> List<T> {
                     self.head.take();
                 }
             }
-            self.size-=1;
+            self.size -= 1;
             Rc::try_unwrap(old_tail).ok().unwrap().into_inner().elem
         })
+    }
+
+    pub fn pop_nth(&mut self, index: u32) -> Option<T> {
+        if self.head.is_some() && index < self.size {
+            let mut i = 0;
+            let mut cur_node = self.head.clone();
+            while i < index {
+                cur_node = cur_node.map(|node| node.borrow().next.clone().unwrap());
+                i += 1;
+            }
+            cur_node.map(|node| {
+                match node.borrow().next.clone() {
+                    Some(next_node) => { next_node.borrow_mut().prev = node.borrow().prev.clone(); }
+                    None => { self.tail = node.borrow().prev.clone(); }
+                }
+
+                match node.borrow().prev.clone() {
+                    Some(prev_node) => { prev_node.borrow_mut().next = node.borrow().next.clone(); }
+                    None => { self.head = node.borrow().next.clone(); }
+                }
+                self.size -= 1;
+                Rc::try_unwrap(node).ok().unwrap().into_inner().elem
+            })
+        } else {
+            None
+        }
     }
 
     pub fn get_head(&self) -> Option<Ref<T>> {
@@ -156,7 +174,7 @@ impl<T> List<T> {
         })
     }
 
-    pub fn print_dbl_linked_list(&self, print_item: fn(&T) ) {
+    pub fn print_dbl_linked_list(&self, print_item: fn(&T)) {
         let mut h = self.head.clone();
         loop {
             match h.clone() {
@@ -175,8 +193,7 @@ impl<T> List<T> {
     pub fn is_empty(&self) -> bool {
         if self.head.is_none() {
             true
-        }
-        else {
+        } else {
             false
         }
     }
