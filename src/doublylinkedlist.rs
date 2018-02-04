@@ -84,7 +84,7 @@ impl<T> List<T> {
                 node.borrow_mut().next = Some(new_node);
 
                 match node.borrow_mut().prev.clone() {
-                    Some(next_node) => {}
+                    Some(_prev_node) => {}
                     None => { self.head = Some(node.clone()) }
                 }
             });
@@ -134,47 +134,50 @@ impl<T> List<T> {
             }
             cur_node.map(|node| {
                 match node.borrow().next.clone() {
-                    Some(next_node) => { next_node.borrow_mut().prev = node.borrow().prev.clone(); }
-                    None => { self.tail = node.borrow().prev.clone(); }
+                    Some(next_node) => {
+                        next_node.borrow_mut().prev = node.borrow().prev.clone();
+                    }
+                    None => {
+                        self.tail = node.borrow().prev.clone();
+                    }
                 }
 
                 match node.borrow().prev.clone() {
-                    Some(prev_node) => { prev_node.borrow_mut().next = node.borrow().next.clone(); }
-                    None => { self.head = node.borrow().next.clone(); }
+                    Some(prev_node) => {
+                        prev_node.borrow_mut().next = node.borrow().next.clone();
+                    }
+                    None => {
+                        self.head = node.borrow().next.clone();
+                    }
                 }
                 self.size -= 1;
                 Rc::try_unwrap(node).ok().unwrap().into_inner().elem
             })
-        } else {
-            None
+        }
+            else {
+                None
         }
     }
 
-    pub fn get_head(&self) -> Option<Ref<T>> {
-        self.head.as_ref().map(|node| {
-            Ref::map(node.borrow(), |node| &node.elem)
-        })
+    pub fn reverse(&mut self) {
+        for i in 1..self.size {
+            let h = self.pop_head().unwrap();
+            self.push_tail(h);
+        }
     }
 
-    pub fn get_head_mut(&mut self) -> Option<RefMut<T>> {
-        self.head.as_ref().map(|node| {
-            RefMut::map(node.borrow_mut(), |node| &mut node.elem)
-        })
+
+    pub fn filter(&mut self, filter_item: fn(&T) -> bool) {
+        for i in 1..self.size {
+            let h = self.pop_head().unwrap();
+            if filter_item(&h) {
+                self.push_tail(h);
+            }
+            else {}
+        }
     }
 
-    pub fn get_tail(&self) -> Option<Ref<T>> {
-        self.tail.as_ref().map(|node| {
-            Ref::map(node.borrow(), |node| &node.elem)
-        })
-    }
-
-    pub fn get_tail_mut(&mut self) -> Option<RefMut<T>> {
-        self.tail.as_ref().map(|node| {
-            RefMut::map(node.borrow_mut(), |node| &mut node.elem)
-        })
-    }
-
-    pub fn print_dbl_linked_list(&self, print_item: fn(&T)) {
+    pub fn print(&self, print_item: fn(&T)) {
         let mut h = self.head.clone();
         loop {
             match h.clone() {
