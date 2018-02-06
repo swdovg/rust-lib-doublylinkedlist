@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefMut, RefCell};
+use std::cell::{Ref, RefCell};
 use std::rc::Rc;
 
 pub struct List<T> {
@@ -61,7 +61,6 @@ impl<T> List<T> {
         }
         self.size += 1;
     }
-
 
     pub fn push_nth(&mut self, index: u32, elem: T) {
         if index < self.size {
@@ -159,22 +158,52 @@ impl<T> List<T> {
         }
     }
 
+    pub fn get_head(&self) -> Option<Ref<T>> {
+        self.head.as_ref().map(|node| {
+            Ref::map(node.borrow(), |node| &node.elem)
+        })
+    }
+
+    pub fn get_tail(&self) -> Option<Ref<T>> {
+        self.tail.as_ref().map(|node| {
+            Ref::map(node.borrow(), |node| &node.elem)
+        })
+    }
+
     pub fn reverse(&mut self) {
-        for i in 1..self.size {
+        for _i in 1..self.size {
             let h = self.pop_head().unwrap();
             self.push_tail(h);
         }
     }
 
-
     pub fn filter(&mut self, filter_item: fn(&T) -> bool) {
-        for i in 1..self.size {
+        for _i in 1..self.size {
             let h = self.pop_head().unwrap();
             if filter_item(&h) {
                 self.push_tail(h);
             }
             else {}
         }
+    }
+
+    pub fn is_value_exist(&self, value: T, compare: fn(&T, &T) -> bool) -> bool {
+        let mut h = self.head.clone();
+        for _i in 0..self.size {
+            match h.clone() {
+                Some(node) => {
+                    if compare(&value, &node.borrow().elem) {
+                       return true;
+                    }
+                    else {
+                        h = node.borrow().next.clone();
+                    }
+                }
+                None => {
+                }
+            }
+        }
+        false
     }
 
     pub fn print(&self, print_item: fn(&T)) {
