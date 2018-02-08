@@ -3,5 +3,7 @@
 *.iml
 *.xml
 lib.rs
+*.rlib
+main.rs
 TODO
 /target/
